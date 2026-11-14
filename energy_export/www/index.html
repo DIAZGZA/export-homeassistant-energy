@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Energy Export · Sensores</title>
+  <style>
+    :root { color-scheme: light dark; font: 16px system-ui, sans-serif; }
+    body { max-width: 900px; margin: 0 auto; padding: 1.2rem; }
+    h1 { margin-bottom: .3rem; }
+    .muted { opacity: .75; }
+    .toolbar { display: flex; gap: .7rem; flex-wrap: wrap; margin: 1rem 0; }
+    button { padding: .65rem 1rem; border: 0; border-radius: .4rem; cursor: pointer; }
+    .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: .9rem; }
+    label { display: grid; gap: .35rem; font-weight: 600; }
+    select { width: 100%; padding: .6rem; border-radius: .35rem; }
+    #status { min-height: 1.5rem; margin: .8rem 0; }
+    .error { color: #d33; }
+  </style>
+</head>
+<body>
+  <h1>Seleccionar sensores de energía</h1>
+  <p class="muted">Las sugerencias se calculan a partir del nombre, ID, unidad y clase de cada sensor. Confirma los statistic IDs en tu instalación. Los cambios se guardan en el almacenamiento persistente del add-on; las demás opciones siguen en la configuración nativa.</p>
+  <div class="toolbar">
+    <button id="reload" type="button">Volver a cargar sensores</button>
+    <button id="save" type="button">Guardar selecciones</button>
+  </div>
+  <div id="status" role="status" aria-live="polite"></div>
+  <form id="sensor-form" class="fields"></form>
+  <script>
+    const fields = [
+      ["solar_stat", "Producción solar", ["solar", "photovoltaic", "pv", "yield", "produccion", "producción"]],
+      ["consumption_stat", "Consumo de la vivienda", ["consumption", "consumo", "house", "casa", "home"]],
+      ["grid_import_stat", "Importación de red", ["grid import", "import", "consumption", "prelievo", "importacion", "importación"]],
+      ["grid_export_stat", "Exportación a red", ["grid export", "export", "feed in", "exportacion", "exportación", "immissione"]],
+      ["peak_stat", "Potencia máxima diaria", ["peak", "max", "power", "potenza", "pico", "potencia"]],
+      ["import_f1_stat", "Importación tarifa F1", ["f1", "fascia 1", "band 1"]],
+      ["import_f2_stat", "Importación tarifa F2", ["f2", "fascia 2", "band 2"]],
+      ["import_f3_stat", "Importación tarifa F3", ["f3", "fascia 3", "band 3"]],
+      ["battery_discharge_f1_stat", "Descarga de batería F1", ["battery", "batteria", "batería", "discharge", "scarica", "f1"]],
+      ["battery_discharge_f2_stat", "Descarga de batería F2", ["battery", "batteria", "batería", "discharge", "scarica", "f2"]],
+      ["battery_discharge_f3_stat", "Descarga de batería F3", ["battery", "batteria", "batería", "discharge", "scarica", "f3"]],
+    ];
+    const form = document.getElementById("sensor-form");
+    const status = document.getElementById("status");
+    let sensors = [];
+    function score(sensor, terms) {
+      const text = `${sensor.entity_id} ${sensor.name} ${sensor.unit} ${sensor.device_class} ${sensor.state_class}`.toLowerCase();
+      return terms.reduce((n, term) => n + (text.includes(term) ? 1 : 0), 0);
+    }
+    function setStatus(message, error = false) {
+      status.textContent = message;
+      status.className = error ? "error" : "";
+    }
+    async function loadSensors() {
+      setStatus("Consultando sensores de Home Assistant…");
+      try {
+        const response = await fetch("./api/sensors", {cache: "no-store"});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+        sensors = data.sensors || [];
+        form.replaceChildren();
+        for (const [key, title, terms] of fields) {
+          const label = document.createElement("label");
+          label.append(document.createTextNode(title));
+          const select = document.createElement("select");
+          select.name = key;
+          const current = data.selections?.[key] || "";
+          const best = [...sensors].sort((a, b) => score(b, terms) - score(a, terms));
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = "— No cambiar —";
+          select.append(placeholder);
+          for (const sensor of best) {
+            const option = document.createElement("option");
+            option.value = sensor.entity_id;
+            const metadata = [sensor.unit, sensor.device_class, sensor.state_class].filter(Boolean).join(" · ");
+            option.textContent = `${sensor.name} (${sensor.entity_id})${metadata ? ` — ${metadata}` : ""}`;
+            select.append(option);
+          }
+          select.value = current;
+          label.append(select);
+          form.append(label);
+        }
+        setStatus(`${sensors.length} sensores encontrados. Las opciones con más coincidencias aparecen primero.`);
+      } catch (error) {
+        setStatus(`No se pudieron cargar los sensores: ${error.message}`, true);
+      }
+    }
+    document.getElementById("reload").addEventListener("click", loadSensors);
+    document.getElementById("save").addEventListener("click", async () => {
+      const values = Object.fromEntries([...form.elements].filter(e => e.name).map(e => [e.name, e.value]));
+      setStatus("Guardando selecciones…");
+      try {
+        const response = await fetch("./api/selections", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(values),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+        setStatus("Selecciones guardadas. Se aplicarán en la próxima sincronización.");
+      } catch (error) {
+        setStatus(`No se pudieron guardar las selecciones: ${error.message}`, true);
+      }
+    });
+    loadSensors();
+  </script>
+</body>
+</html>

@@ -15,6 +15,7 @@ COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY export_energy_to_excel.py sync_energy_to_sqlite.py addon_runner.py ./
+COPY www/ /app/www/
 COPY run.sh /run.sh
 RUN chmod 755 /run.sh \
     && chown -R appuser:appgroup /app \
