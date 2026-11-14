@@ -1,5 +1,5 @@
 name: Energy Export
-version: 1.1.0
+version: 1.2.0
 slug: energy_export
 description: Sincroniza diariamente estadísticas de energía de Home Assistant en SQLite.
 url: https://github.com/DIAZGZA/export-homeassistant-energy
