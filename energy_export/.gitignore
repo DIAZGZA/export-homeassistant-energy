@@ -1,0 +1,4 @@
+# Pruebas locales de Docker Compose
+.env
+data/
+options.json

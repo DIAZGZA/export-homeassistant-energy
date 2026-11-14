@@ -1,0 +1,22 @@
+{
+  "home_assistant_url": "http://host.docker.internal:8123",
+  "start_date": "2024-01-01",
+  "database_file": "energy_daily.sqlite",
+  "table": "daily_energy",
+  "timezone": "Europe/Madrid",
+  "sync_hour": 1,
+  "sync_minute": 0,
+  "run_on_startup": false,
+  "healthchecks_ping_url": "",
+  "solar_stat": "sensor.inverter_total_yield",
+  "consumption_stat": "sensor.consumo_casa_total_energy",
+  "grid_import_stat": "sensor.power_meter_consumption",
+  "grid_export_stat": "sensor.power_meter_exported",
+  "peak_stat": "sensor.inverter_day_active_power_peak",
+  "import_f1_stat": "sensor.energia_giornaliera_casa_fascia_f1",
+  "import_f2_stat": "sensor.energia_giornaliera_casa_fascia_f2",
+  "import_f3_stat": "sensor.energia_giornaliera_casa_fascia_f3",
+  "battery_discharge_f1_stat": "sensor.cantina_marstek_venus_scarica_marstek_fasce_f1",
+  "battery_discharge_f2_stat": "sensor.cantina_marstek_venus_scarica_marstek_fasce_f2",
+  "battery_discharge_f3_stat": "sensor.cantina_marstek_venus_scarica_marstek_fasce_f3"
+}

@@ -1,0 +1,17 @@
+services:
+  energy-export:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: energy-export-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      # En desarrollo el panel queda accesible solo desde este equipo.
+      - "127.0.0.1:8099:8099"
+    extra_hosts:
+      # Permite a contenedores Linux acceder a Home Assistant ejecutado en el host.
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/data
