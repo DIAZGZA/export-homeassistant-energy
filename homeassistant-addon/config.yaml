@@ -1,7 +1,7 @@
-name: Energy Export
-version: 1.0.0
-slug: energy_export
-description: Sincroniza estadísticas diarias de energía de Home Assistant en una base SQLite.
+name: Energy Export (obsoleto)
+version: 0.9.0
+slug: energy_export_legacy
+description: Versión anterior; instala Energy Export desde la carpeta energy_export.
 url: https://github.com/DIAZGZA/export-homeassistant-energy
 arch:
   - aarch64
